@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndoRegion API — Data Wilayah Indonesia lewat API Key</title>
+<meta name="description" content="SaaS REST API data wilayah administratif Indonesia. Register, terbitkan API key, ambil data 61 wilayah lewat satu endpoint.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ocean:#0B1E33;
+    --ocean-mid:#12314F;
+    --ocean-line:rgba(201,161,90,0.22);
+    --paper:#F2E9D6;
+    --paper-line:rgba(27,36,48,0.12);
+    --gold:#C9A15A;
+    --coral:#D9714E;
+    --ink:#1B2430;
+    --mist:#9DB3CC;
+    --mono:'IBM Plex Mono', monospace;
+    --serif:'Fraunces', serif;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  img,svg{display:block;max-width:100%;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    background:radial-gradient(ellipse at 30% -10%, var(--ocean-mid), var(--ocean) 65%);
+    color:var(--paper);
+    overflow:hidden;
+    padding:0 0 70px;
+  }
+  .hero-nav{
+    max-width:1180px;margin:0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:28px 28px 0;
+  }
+  .brand{
+    font-family:var(--serif);font-weight:600;font-size:20px;letter-spacing:0.01em;
+    display:flex;align-items:center;gap:10px;
+  }
+  .brand-mark{
+    width:20px;height:20px;border-radius:50%;
+    background:conic-gradient(from 200deg, var(--gold), var(--coral), var(--gold));
+    box-shadow:0 0 0 3px rgba(201,161,90,0.18);
+  }
+  .hero-nav-links{display:flex;gap:28px;font-size:14px;color:var(--mist);flex-wrap:wrap;}
+  .hero-nav-links a{text-decoration:none;transition:color .15s;white-space:nowrap;}
+  .hero-nav-links a:hover{color:var(--gold);}
+
+  .hero-inner{
+    max-width:1180px;margin:0 auto;
+    padding:56px 28px 0;
+    display:grid;grid-template-columns:1fr;gap:8px;
+    position:relative;
+    z-index:2;
+  }
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--gold);margin:0 0 18px;
+  }
+  .hero h1{
+    font-family:var(--serif);font-weight:500;
+    font-size:clamp(34px,5.4vw,60px);
+    line-height:1.06;
+    margin:0 0 22px;
+    max-width:15ch;
+    letter-spacing:-0.01em;
+  }
+  .hero h1 em{font-style:italic;color:var(--gold);font-weight:500;}
+  .hero p.lede{
+    font-size:17px;line-height:1.65;color:var(--mist);
+    max-width:46ch;margin:0 0 34px;
+  }
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:64px;}
+  .btn{
+    font-family:var(--sans);font-weight:600;font-size:14.5px;
+    padding:13px 24px;border-radius:3px;text-decoration:none;
+    display:inline-flex;align-items:center;gap:8px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary{background:var(--gold);color:var(--ocean);}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(201,161,90,0.35);}
+  .btn-ghost{border:1px solid rgba(242,233,214,0.28);color:var(--paper);}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* archipelago map */
+  .chart-wrap{
+    position:relative;
+    border:1px solid var(--ocean-line);
+    border-radius:4px;
+    background:linear-gradient(180deg, rgba(18,49,79,0.55), rgba(11,30,51,0.85));
+    padding:18px 18px 14px;
+  }
+  .chart-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-family:var(--mono);font-size:11.5px;color:var(--mist);
+    letter-spacing:0.06em;text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .chart-head b{color:var(--gold);font-weight:500;}
+  .chart-svg{width:100%;height:auto;}
+  .grat{stroke:var(--ocean-line);stroke-width:1;}
+  .dot{fill:var(--gold);fill-opacity:0.88;stroke:var(--ocean);stroke-width:0.6;}
+  .dot:hover{fill:var(--coral);fill-opacity:1;}
+  .chart-foot{
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+    font-family:var(--mono);font-size:11px;color:var(--mist);
+    margin-top:10px;padding-top:10px;border-top:1px solid var(--ocean-line);
+  }
+  .chart-foot span b{color:var(--gold);}
+
+  /* ---------- LEDGER STATS ---------- */
+  .ledger{
+    background:var(--paper);
+    border-bottom:1px solid var(--paper-line);
+  }
+  .ledger-inner{
+    max-width:1180px;margin:0 auto;padding:36px 28px;
+    display:flex;flex-wrap:wrap;
+  }
+  .ledger-item{
+    flex:1 1 0;min-width:140px;
+    padding:0 24px;border-left:1px solid var(--paper-line);
+  }
+  .ledger-item:first-child{border-left:none;padding-left:0;}
+  .ledger-num{
+    font-family:var(--serif);font-weight:500;font-size:34px;color:var(--ocean);
+    display:block;
+  }
+  .ledger-label{
+    font-family:var(--mono);font-size:11.5px;color:#6b7583;
+    text-transform:uppercase;letter-spacing:0.08em;
+  }
+
+  /* ---------- SECTION SHARED ---------- */
+  section{max-width:1180px;margin:0 auto;padding:88px 28px;}
+  .section-head{max-width:640px;margin-bottom:48px;}
+  .section-eyebrow{
+    font-family:var(--mono);font-size:12px;color:var(--coral);
+    text-transform:uppercase;letter-spacing:0.12em;margin:0 0 14px;
+  }
+  .section-head h2{
+    font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.4vw,38px);
+    margin:0 0 14px;color:var(--ocean);letter-spacing:-0.01em;
+  }
+  .section-head p{font-size:15.5px;line-height:1.65;color:#4a5568;margin:0;}
+
+  /* ---------- ENDPOINTS MANIFEST ---------- */
+  .manifest{border-top:1px solid var(--paper-line);}
+  .manifest-row{
+    display:flex;align-items:center;gap:20px;
+    padding:20px 0;border-bottom:1px solid var(--paper-line);
+  }
+  .manifest-row.head{
+    font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;
+    color:#8a93a3;padding-bottom:12px;
+  }
+  .manifest-row.head span:nth-child(1){flex:0 0 64px;}
+  .manifest-row.head span:nth-child(2){flex:0 0 220px;}
+  .manifest-row.head span:nth-child(3){flex:1 1 auto;}
+  .manifest-row.head span:nth-child(4){flex:0 0 90px;text-align:right;}
+  .method{
+    flex:0 0 64px;
+    font-family:var(--mono);font-weight:500;font-size:12px;
+    padding:4px 9px;border-radius:2px;text-align:center;letter-spacing:0.03em;
+  }
+  .method.get{background:rgba(201,161,90,0.16);color:#8a6a26;}
+  .method.post{background:rgba(217,113,78,0.16);color:#a8482a;}
+  .method.delete{background:rgba(27,36,48,0.08);color:#5a6472;}
+  .path{flex:0 0 220px;font-family:var(--mono);font-size:14.5px;color:var(--ocean);}
+  .desc{flex:1 1 auto;font-size:14px;color:#5a6472;line-height:1.5;}
+  .auth-tag{
+    flex:0 0 90px;
+    font-family:var(--mono);font-size:10.5px;color:#8a93a3;text-align:right;
+  }
+
+  /* ---------- FLOW / WAYPOINTS ---------- */
+  .flow{
+    background:var(--ocean);color:var(--paper);
+  }
+  .flow-inner{max-width:1180px;margin:0 auto;padding:88px 28px;}
+  .flow .section-head p{color:var(--mist);}
+  .flow .section-head h2{color:var(--paper);}
+  .flow .section-eyebrow{color:var(--gold);}
+  .route{
+    position:relative;
+    display:flex;flex-wrap:wrap;gap:32px;
+    margin-top:20px;
+  }
+  .route::before{
+    content:"";position:absolute;top:17px;left:8%;right:8%;height:1px;
+    background-image:linear-gradient(90deg, var(--ocean-line) 0 6px, transparent 6px 12px);
+    background-size:12px 1px;
+  }
+  .waypoint{position:relative;padding-top:52px;flex:1 1 240px;min-width:220px;}
+  .waypoint-dot{
+    position:absolute;top:0;left:0;width:35px;height:35px;border-radius:50%;
+    background:var(--ocean);border:1px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:15px;color:var(--gold);
+  }
+  .waypoint h3{
+    font-family:var(--sans);font-weight:600;font-size:16px;margin:0 0 10px;color:var(--paper);
+  }
+  .waypoint p{font-size:13.5px;line-height:1.6;color:var(--mist);margin:0 0 14px;}
+  .waypoint code{
+    display:block;font-family:var(--mono);font-size:12px;color:var(--gold);
+    background:rgba(242,233,214,0.06);border:1px solid var(--ocean-line);
+    padding:9px 11px;border-radius:3px;overflow-x:auto;white-space:pre;
+  }
+
+  /* ---------- CODE DEMO ---------- */
+  .demo-grid{
+    display:flex;flex-wrap:wrap;gap:22px;
+    margin-top:8px;
+  }
+  .term{flex:1 1 320px;min-width:280px;}
+  .term{
+    background:var(--ocean);border-radius:5px;overflow:hidden;
+    border:1px solid rgba(0,0,0,0.2);
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:11px 14px;background:var(--ocean-mid);
+  }
+  .term-dot{width:9px;height:9px;border-radius:50%;background:rgba(242,233,214,0.2);}
+  .term-title{
+    margin-left:8px;font-family:var(--mono);font-size:11px;color:var(--mist);
+  }
+  .term pre{
+    margin:0;padding:18px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.7;
+    color:#dce6f2;overflow-x:auto;
+  }
+  .term .c1{color:var(--gold);}
+  .term .c2{color:var(--coral);}
+  .term .c3{color:#8fbf9f;}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:1px solid var(--paper-line);
+    padding:44px 28px 60px;
+  }
+  .footer-inner{
+    max-width:1180px;margin:0 auto;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;
+  }
+  .stack-badges{display:flex;gap:10px;flex-wrap:wrap;}
+  .badge{
+    font-family:var(--mono);font-size:11px;color:#5a6472;
+    border:1px solid var(--paper-line);padding:6px 11px;border-radius:20px;
+  }
+  .footer-note{font-size:13px;color:#8a93a3;}
+
+  @media (max-width:820px){
+    .ledger-item{flex:1 1 45%;margin-bottom:22px;}
+    .ledger-item:nth-child(3){border-left:none;padding-left:0;}
+    .manifest-row{flex-wrap:wrap;}
+    .manifest-row .path{flex:1 1 auto;}
+    .manifest-row .desc{flex:1 1 100%;order:3;}
+    .manifest-row .auth-tag{flex:0 0 auto;margin-left:auto;}
+    .manifest-row.head{display:none;}
+    .route::before{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-nav">
+    <div class="brand"><span class="brand-mark"></span> IndoRegion API</div>
+    <div class="hero-nav-links">
+      <a href="#endpoints">Endpoints</a>
+      <a href="#alur">Alur Pakai</a>
+      <a href="/health">Status</a>
+      <a href="https://github.com/Rakha-arch/indoregion-api" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+
+  <div class="hero-inner">
+    <p class="eyebrow">SaaS REST API &middot; Data Wilayah Indonesia</p>
+    <h1>Setiap titik di peta ini <em>adalah satu baris data</em> yang bisa Anda panggil.</h1>
+    <p class="lede">IndoRegion API menyediakan data 61 wilayah administratif Indonesia — populasi, luas, ibu kota, koordinat — lewat satu API key. Daftar, terbitkan key, mulai ambil data dalam hitungan menit.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#alur">Mulai Pakai →</a>
+      <a class="btn btn-ghost" href="#endpoints">Lihat Endpoint</a>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-head">
+        <span>Peta Cakupan Data — <b>61 wilayah</b>, 7 gugusan pulau</span>
+        <span>ukuran titik &asymp; populasi</span>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+        <g class="grat">
+          <line x1="0" y1="70" x2="900" y2="70"/>
+          <line x1="0" y1="140" x2="900" y2="140"/>
+          <line x1="0" y1="210" x2="900" y2="210"/>
+          <line x1="0" y1="280" x2="900" y2="280"/>
+          <line x1="0" y1="350" x2="900" y2="350"/>
+          <line x1="150" y1="0" x2="150" y2="420"/>
+          <line x1="300" y1="0" x2="300" y2="420"/>
+          <line x1="450" y1="0" x2="450" y2="420"/>
+          <line x1="600" y1="0" x2="600" y2="420"/>
+          <line x1="750" y1="0" x2="750" y2="420"/>
+        </g>
+        <g>
+      <circle cx="247.9" cy="293.7" r="4.3" class="dot" data-name="Jakarta Pusat"><title>Jakarta Pusat, DKI Jakarta</title></circle>
+      <circle cx="248.5" cy="292.7" r="5.2" class="dot" data-name="Jakarta Utara"><title>Jakarta Utara, DKI Jakarta</title></circle>
+      <circle cx="246.6" cy="293.3" r="5.7" class="dot" data-name="Jakarta Barat"><title>Jakarta Barat, DKI Jakarta</title></circle>
+      <circle cx="247.5" cy="295.3" r="5.6" class="dot" data-name="Jakarta Selatan"><title>Jakarta Selatan, DKI Jakarta</title></circle>
+      <circle cx="249.1" cy="294.5" r="6.1" class="dot" data-name="Jakarta Timur"><title>Jakarta Timur, DKI Jakarta</title></circle>
+      <circle cx="262.1" cy="309.5" r="5.7" class="dot" data-name="Kota Bandung"><title>Kota Bandung, Jawa Barat</title></circle>
+      <circle cx="261.1" cy="312.3" r="6.6" class="dot" data-name="Kabupaten Bandung"><title>Kabupaten Bandung, Jawa Barat</title></circle>
+      <circle cx="253.8" cy="294.8" r="6.2" class="dot" data-name="Kabupaten Bekasi"><title>Kabupaten Bekasi, Jawa Barat</title></circle>
+      <circle cx="250.5" cy="294.8" r="5.8" class="dot" data-name="Kota Bekasi"><title>Kota Bekasi, Jawa Barat</title></circle>
+      <circle cx="247.4" cy="302.6" r="4.5" class="dot" data-name="Kota Bogor"><title>Kota Bogor, Jawa Barat</title></circle>
+      <circle cx="247.8" cy="300.1" r="7.7" class="dot" data-name="Kabupaten Bogor"><title>Kabupaten Bogor, Jawa Barat</title></circle>
+      <circle cx="247.2" cy="298.4" r="5.6" class="dot" data-name="Kota Depok"><title>Kota Depok, Jawa Barat</title></circle>
+      <circle cx="312.6" cy="310.6" r="5.1" class="dot" data-name="Kota Semarang"><title>Kota Semarang, Jawa Tengah</title></circle>
+      <circle cx="309.0" cy="321.5" r="4.7" class="dot" data-name="Kabupaten Magelang"><title>Kabupaten Magelang, Jawa Tengah</title></circle>
+      <circle cx="309.0" cy="321.5" r="2.2" class="dot" data-name="Kota Magelang"><title>Kota Magelang, Jawa Tengah</title></circle>
+      <circle cx="320.0" cy="323.7" r="3.7" class="dot" data-name="Kota Surakarta"><title>Kota Surakarta, Jawa Tengah</title></circle>
+      <circle cx="320.3" cy="307.1" r="4.2" class="dot" data-name="Kabupaten Kudus"><title>Kabupaten Kudus, Jawa Tengah</title></circle>
+      <circle cx="311.8" cy="328.5" r="3.4" class="dot" data-name="Kota Yogyakarta"><title>Kota Yogyakarta, DI Yogyakarta</title></circle>
+      <circle cx="311.0" cy="330.5" r="4.4" class="dot" data-name="Kabupaten Bantul"><title>Kabupaten Bantul, DI Yogyakarta</title></circle>
+      <circle cx="311.9" cy="327.1" r="4.6" class="dot" data-name="Kabupaten Sleman"><title>Kabupaten Sleman, DI Yogyakarta</title></circle>
+      <circle cx="354.8" cy="316.9" r="6.1" class="dot" data-name="Kota Surabaya"><title>Kota Surabaya, Jawa Timur</title></circle>
+      <circle cx="352.7" cy="332.2" r="4.2" class="dot" data-name="Kota Malang"><title>Kota Malang, Jawa Timur</title></circle>
+      <circle cx="353.3" cy="335.8" r="5.9" class="dot" data-name="Kabupaten Malang"><title>Kabupaten Malang, Jawa Timur</title></circle>
+      <circle cx="371.4" cy="336.9" r="5.8" class="dot" data-name="Kabupaten Jember"><title>Kabupaten Jember, Jawa Timur</title></circle>
+      <circle cx="350.7" cy="330.1" r="2.9" class="dot" data-name="Kota Batu"><title>Kota Batu, Jawa Timur</title></circle>
+      <circle cx="244.3" cy="293.5" r="5.4" class="dot" data-name="Kota Tangerang"><title>Kota Tangerang, Banten</title></circle>
+      <circle cx="240.5" cy="295.1" r="6.5" class="dot" data-name="Kabupaten Tangerang"><title>Kabupaten Tangerang, Banten</title></circle>
+      <circle cx="245.8" cy="295.9" r="5.2" class="dot" data-name="Kota Tangerang Selatan"><title>Kota Tangerang Selatan, Banten</title></circle>
+      <circle cx="235.6" cy="292.2" r="4.0" class="dot" data-name="Kota Serang"><title>Kota Serang, Banten</title></circle>
+      <circle cx="40.0" cy="40.0" r="3.1" class="dot" data-name="Kota Banda Aceh"><title>Kota Banda Aceh, Aceh</title></circle>
+      <circle cx="100.5" cy="82.2" r="5.7" class="dot" data-name="Kota Medan"><title>Kota Medan, Sumatera Utara</title></circle>
+      <circle cx="102.8" cy="83.0" r="5.6" class="dot" data-name="Kabupaten Deli Serdang"><title>Kabupaten Deli Serdang, Sumatera Utara</title></circle>
+      <circle cx="130.9" cy="180.5" r="4.3" class="dot" data-name="Kota Padang"><title>Kota Padang, Sumatera Barat</title></circle>
+      <circle cx="150.7" cy="148.4" r="4.5" class="dot" data-name="Kota Pekanbaru"><title>Kota Pekanbaru, Riau</title></circle>
+      <circle cx="189.7" cy="194.8" r="3.8" class="dot" data-name="Kota Jambi"><title>Kota Jambi, Jambi</title></circle>
+      <circle cx="210.7" cy="224.3" r="5.1" class="dot" data-name="Kota Palembang"><title>Kota Palembang, Sumatera Selatan</title></circle>
+      <circle cx="165.3" cy="242.0" r="3.4" class="dot" data-name="Kota Bengkulu"><title>Kota Bengkulu, Bengkulu</title></circle>
+      <circle cx="219.5" cy="277.3" r="4.6" class="dot" data-name="Kota Bandar Lampung"><title>Kota Bandar Lampung, Lampung</title></circle>
+      <circle cx="235.0" cy="206.0" r="2.9" class="dot" data-name="Kota Pangkal Pinang"><title>Kota Pangkal Pinang, Kepulauan Bangka Belitung</title></circle>
+      <circle cx="197.3" cy="137.4" r="4.7" class="dot" data-name="Kota Batam"><title>Kota Batam, Kepulauan Riau</title></circle>
+      <circle cx="293.2" cy="160.5" r="3.9" class="dot" data-name="Kota Pontianak"><title>Kota Pontianak, Kalimantan Barat</title></circle>
+      <circle cx="375.9" cy="207.7" r="3.2" class="dot" data-name="Kota Palangkaraya"><title>Kota Palangkaraya, Kalimantan Tengah</title></circle>
+      <circle cx="388.1" cy="231.7" r="4.0" class="dot" data-name="Kota Banjarmasin"><title>Kota Banjarmasin, Kalimantan Selatan</title></circle>
+      <circle cx="428.9" cy="186.7" r="4.0" class="dot" data-name="Kota Balikpapan"><title>Kota Balikpapan, Kalimantan Timur</title></circle>
+      <circle cx="434.3" cy="170.8" r="4.2" class="dot" data-name="Kota Samarinda"><title>Kota Samarinda, Kalimantan Timur</title></circle>
+      <circle cx="443.0" cy="88.6" r="3.0" class="dot" data-name="Kota Tarakan"><title>Kota Tarakan, Kalimantan Utara</title></circle>
+      <circle cx="573.2" cy="128.1" r="3.5" class="dot" data-name="Kota Manado"><title>Kota Manado, Sulawesi Utara</title></circle>
+      <circle cx="483.4" cy="179.2" r="3.4" class="dot" data-name="Kota Palu"><title>Kota Palu, Sulawesi Tengah</title></circle>
+      <circle cx="475.5" cy="271.3" r="4.9" class="dot" data-name="Kota Makassar"><title>Kota Makassar, Sulawesi Selatan</title></circle>
+      <circle cx="480.9" cy="274.9" r="4.1" class="dot" data-name="Kabupaten Gowa"><title>Kabupaten Gowa, Sulawesi Selatan</title></circle>
+      <circle cx="530.9" cy="245.3" r="3.3" class="dot" data-name="Kota Kendari"><title>Kota Kendari, Sulawesi Tenggara</title></circle>
+      <circle cx="541.0" cy="148.3" r="2.9" class="dot" data-name="Kota Gorontalo"><title>Kota Gorontalo, Gorontalo</title></circle>
+      <circle cx="465.7" cy="217.9" r="2.5" class="dot" data-name="Kota Mamuju"><title>Kota Mamuju, Sulawesi Barat</title></circle>
+      <circle cx="399.3" cy="347.4" r="4.3" class="dot" data-name="Kota Denpasar"><title>Kota Denpasar, Bali</title></circle>
+      <circle cx="398.5" cy="345.7" r="3.9" class="dot" data-name="Kabupaten Badung"><title>Kabupaten Badung, Bali</title></circle>
+      <circle cx="415.6" cy="345.5" r="3.5" class="dot" data-name="Kota Mataram"><title>Kota Mataram, Nusa Tenggara Barat</title></circle>
+      <circle cx="550.9" cy="380.0" r="3.5" class="dot" data-name="Kota Kupang"><title>Kota Kupang, Nusa Tenggara Timur</title></circle>
+      <circle cx="633.5" cy="239.9" r="3.3" class="dot" data-name="Kota Ambon"><title>Kota Ambon, Maluku</title></circle>
+      <circle cx="619.1" cy="143.0" r="2.9" class="dot" data-name="Kota Ternate"><title>Kota Ternate, Maluku Utara</title></circle>
+      <circle cx="860.0" cy="214.7" r="3.5" class="dot" data-name="Kota Jayapura"><title>Kota Jayapura, Papua</title></circle>
+      <circle cx="689.1" cy="178.9" r="3.2" class="dot" data-name="Kota Sorong"><title>Kota Sorong, Papua Barat</title></circle>
+        </g>
+      </svg>
+      <div class="chart-foot">
+        <span><b>95°BT&ndash;141°BT</b> rentang bujur</span>
+        <span><b>10°LS&ndash;6°LU</b> rentang lintang</span>
+        <span>sumber: tabel <b>regions</b>, endpoint /v1/regions</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ledger">
+  <div class="ledger-inner">
+    <div class="ledger-item">
+      <span class="ledger-num">61</span>
+      <span class="ledger-label">Wilayah Tersedia</span>
+    </div>
+    <div class="ledger-item">
+      <span class="ledger-num">4</span>
+      <span class="ledger-label">Tabel Relasional</span>
+    </div>
+    <div class="ledger-item">
+      <span class="ledger-num">JWT</span>
+      <span class="ledger-label">+ API Key Auth</span>
+    </div>
+    <div class="ledger-item">
+      <span class="ledger-num">100</span>
+      <span class="ledger-label">Request / Hari / Key</span>
+    </div>
+  </div>
+</div>
+
+<section id="endpoints">
+  <div class="section-head">
+    <p class="section-eyebrow">Manifest</p>
+    <h2>Sembilan endpoint, tiga lapis akses</h2>
+    <p>Endpoint publik untuk daftar &amp; masuk, endpoint JWT untuk kelola API key, dan endpoint berbayar-data yang dijaga API key sendiri.</p>
+  </div>
+
+  <div class="manifest">
+    <div class="manifest-row head">
+      <span>Method</span><span>Path</span><span>Keterangan</span><span>Akses</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method post">POST</span>
+      <span class="path">/auth/register</span>
+      <span class="desc">Daftar akun baru, menerima token JWT</span>
+      <span class="auth-tag">publik</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method post">POST</span>
+      <span class="path">/auth/login</span>
+      <span class="desc">Masuk dengan email &amp; password</span>
+      <span class="auth-tag">publik</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method post">POST</span>
+      <span class="path">/api-keys</span>
+      <span class="desc">Terbitkan API key baru</span>
+      <span class="auth-tag">JWT</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method get">GET</span>
+      <span class="path">/api-keys</span>
+      <span class="desc">Daftar API key milik akun</span>
+      <span class="auth-tag">JWT</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method get">GET</span>
+      <span class="path">/api-keys/usage</span>
+      <span class="desc">Statistik pemakaian 24 jam terakhir</span>
+      <span class="auth-tag">JWT</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method delete">DELETE</span>
+      <span class="path">/api-keys/:id</span>
+      <span class="desc">Cabut (revoke) API key</span>
+      <span class="auth-tag">JWT</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method get">GET</span>
+      <span class="path">/v1/regions</span>
+      <span class="desc">Daftar wilayah — filter provinsi/tipe/pulau, pagination</span>
+      <span class="auth-tag">API key</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method get">GET</span>
+      <span class="path">/v1/regions/:code</span>
+      <span class="desc">Detail satu wilayah berdasar kode</span>
+      <span class="auth-tag">API key</span>
+    </div>
+    <div class="manifest-row">
+      <span class="method get">GET</span>
+      <span class="path">/v1/regions/stats</span>
+      <span class="desc">Agregat populasi, luas, densitas per provinsi</span>
+      <span class="auth-tag">API key</span>
+    </div>
+  </div>
+</section>
+
+<div class="flow" id="alur">
+  <div class="flow-inner">
+    <div class="section-head">
+      <p class="section-eyebrow">Rute Akses</p>
+      <h2>Tiga pemberhentian dari akun kosong ke data pertama</h2>
+      <p>Alur yang sama dipakai di dokumentasi teknis (ERD, use case, activity diagram) proyek ini.</p>
+    </div>
+    <div class="route">
+      <div class="waypoint">
+        <div class="waypoint-dot">1</div>
+        <h3>Daftar &amp; masuk</h3>
+        <p>Kirim nama, email, dan password. Sistem membalas token JWT untuk sesi Anda.</p>
+        <code>POST /auth/register</code>
+      </div>
+      <div class="waypoint">
+        <div class="waypoint-dot">2</div>
+        <h3>Terbitkan API key</h3>
+        <p>Pakai token JWT untuk membuat API key — inilah yang dipasang di aplikasi Anda.</p>
+        <code>POST /api-keys
+Authorization: Bearer &lt;jwt&gt;</code>
+      </div>
+      <div class="waypoint">
+        <div class="waypoint-dot">3</div>
+        <h3>Ambil data</h3>
+        <p>Panggil endpoint data dengan header x-api-key. Tidak perlu JWT lagi di titik ini.</p>
+        <code>GET /v1/regions
+x-api-key: &lt;key&gt;</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="section-head">
+    <p class="section-eyebrow">Contoh Nyata</p>
+    <h2>Satu request, satu balasan</h2>
+    <p>Contoh memanggil data wilayah dengan filter provinsi.</p>
+  </div>
+  <div class="demo-grid">
+    <div class="term">
+      <div class="term-bar"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span><span class="term-title">request.sh</span></div>
+      <pre><span class="c1">curl</span> <span class="c2">"https://indoregion-api.vercel.app/v1/regions?province=Bali"</span> \
+  -H <span class="c3">"x-api-key: irk_xxx...xxx"</span></pre>
+    </div>
+    <div class="term">
+      <div class="term-bar"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span><span class="term-title">response.json</span></div>
+      <pre>{
+  <span class="c1">"data"</span>: [
+    {
+      <span class="c1">"code"</span>: <span class="c3">"51.71"</span>,
+      <span class="c1">"name"</span>: <span class="c3">"Kota Denpasar"</span>,
+      <span class="c1">"province"</span>: <span class="c3">"Bali"</span>,
+      <span class="c1">"population"</span>: <span class="c2">942200</span>,
+      <span class="c1">"area_km2"</span>: <span class="c2">127.78</span>
+    }
+  ],
+  <span class="c1">"pagination"</span>: { <span class="c1">"total"</span>: <span class="c2">2</span> }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="stack-badges">
+      <span class="badge">Express.js</span>
+      <span class="badge">PostgreSQL / Supabase</span>
+      <span class="badge">JWT</span>
+      <span class="badge">Vercel</span>
+    </div>
+    <div class="footer-note">IndoRegion API — data demo untuk keperluan pembelajaran.</div>
+  </div>
+</footer>
+
+</body>
+</html>

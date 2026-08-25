@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -9,11 +10,25 @@ const regionRoutes = require('./routes/regionRoutes');
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'style-src': ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
+        'font-src': ["'self'", 'fonts.gstatic.com'],
+      },
+    },
+  })
+);
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req, res) => {
+// Landing / docs page (static HTML) at the root URL.
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Machine-readable info moved here so it doesn't collide with the HTML landing page.
+app.get('/api', (req, res) => {
   res.json({
     name: 'IndoRegion API',
     description: 'SaaS API providing data on Indonesian administrative regions',
