@@ -8,28 +8,21 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ---------------------------------------------------------------------
 -- users: application accounts, authenticate via JWT (email/password)
 -- ---------------------------------------------------------------------
+-- 1. Buat tabel users terlebih dahulu
 CREATE TABLE IF NOT EXISTS users (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name          VARCHAR(120) NOT NULL,
-  email         VARCHAR(160) UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  plan          VARCHAR(20) NOT NULL DEFAULT 'free', -- free | pro
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ---------------------------------------------------------------------
--- api_keys: keys issued to a user (JWT login required to create/revoke
--- one). The key itself is what protects the public data endpoints.
--- ---------------------------------------------------------------------
+-- 2. Buat tabel api_keys dengan tipe data user_id yang SAMA PERSIS (INTEGER)
 CREATE TABLE IF NOT EXISTS api_keys (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  key         VARCHAR(64) UNIQUE NOT NULL,
-  label       VARCHAR(80) NOT NULL DEFAULT 'default',
-  is_revoked  BOOLEAN NOT NULL DEFAULT false,
-  rate_limit  INTEGER NOT NULL DEFAULT 100, -- requests / day
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_used_at TIMESTAMPTZ
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    api_key VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
