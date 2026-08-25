@@ -19,7 +19,7 @@ async function register(req, res) {
 
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      `INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)
+      `INSERT INTO users (name, email, password) VALUES ($1, $2, $3)
        RETURNING id, name, email, plan, created_at`,
       [name, email, hash]
     );
@@ -46,7 +46,7 @@ async function login(req, res) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const match = await bcrypt.compare(password, user.password_hash);
+    const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
